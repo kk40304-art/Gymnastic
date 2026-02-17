@@ -172,13 +172,13 @@
 (() => {
 
 const DIRS = [
-  { key: "正面", file: { normal:"小美正面.png", sweat:"小美正面流汗.png", tired:"小美正面累.png" } },
-  { key: "前面", file: { normal:"小美前.png", sweat:"小美前流汗.png", tired:"小美前累.png" } },
-  { key: "後面", file: { normal:"小美後.png", sweat:"小美後流汗.png", tired:"小美後累.png" } },
-  { key: "左邊", file: { normal:"小美左.png", sweat:"小美左流汗.png", tired:"小美左累.png" } },
-  { key: "右邊", file: { normal:"小美右.png", sweat:"小美右流汗.png", tired:"小美右累.png" } },
-  { key: "上面", file: { normal:"小美上.png", sweat:"小美上流汗.png", tired:"小美上累.png" } },
-  { key: "下面", file: { normal:"小美下.png", sweat:"小美下流汗.png", tired:"小美下累.png" } }
+  { key: "正面", pinyin:"zhèng miàn", file: { normal:"小美正面.png", sweat:"小美正面流汗.png", tired:"小美正面累.png" } },
+  { key: "前面", pinyin:"qián miàn", file: { normal:"小美前.png", sweat:"小美前流汗.png", tired:"小美前累.png" } },
+  { key: "後面", pinyin:"hòu miàn", file: { normal:"小美後.png", sweat:"小美後流汗.png", tired:"小美後累.png" } },
+  { key: "左邊", pinyin:"zuǒ biān", file: { normal:"小美左.png", sweat:"小美左流汗.png", tired:"小美左累.png" } },
+  { key: "右邊", pinyin:"yòu biān", file: { normal:"小美右.png", sweat:"小美右流汗.png", tired:"小美右累.png" } },
+  { key: "上面", pinyin:"shàng miàn", file: { normal:"小美上.png", sweat:"小美上流汗.png", tired:"小美上累.png" } },
+  { key: "下面", pinyin:"xià miàn", file: { normal:"小美下.png", sweat:"小美下流汗.png", tired:"小美下累.png" } }
 ];
 
 const SPECIAL = { collapse:"小美累趴.png", happy:"小美開心跳.png" };
@@ -197,6 +197,25 @@ function playMusic(m){
   else endSound.play();
 }
 
+// ===== TTS =====
+let zhVoice = null;
+function loadVoice(){
+  const voices = speechSynthesis.getVoices();
+  zhVoice = voices.find(v=>v.lang.includes("zh")) || null;
+}
+speechSynthesis.onvoiceschanged = loadVoice;
+loadVoice();
+
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang="zh-TW";
+  if(zhVoice) u.voice = zhVoice;
+  u.rate=1;
+  u.pitch=1;
+  speechSynthesis.speak(u);
+}
+
+// ===== Game State =====
 let round=0, mistakes=0, phase="normal", target=null;
 let countdown=0, timer=null;
 
@@ -265,21 +284,33 @@ function success(){
   setTimeout(()=>{ modalTitle.textContent="恭喜你！"; modalMsg.textContent="完成健身！"; modal.classList.add("active"); },5000);
 }
 
+// ===== Build Buttons (拼音回來了) =====
 DIRS.forEach(d=>{
   const b=document.createElement("button");
   b.className="btn";
-  b.innerHTML=`<div class="btnLabel"><div class="bHanzi">${d.key}</div></div>`;
-  b.onclick=()=>{ if(d.key===target.key) correct(); else wrong(); };
+  b.innerHTML=`
+    <div class="btnLabel">
+      <div class="bHanzi">${d.key}</div>
+      <div class="bPinyin">${d.pinyin}</div>
+    </div>
+  `;
+  b.onclick=()=>{
+    speak(d.key);  // TTS 回來
+    if(d.key===target.key) correct();
+    else wrong();
+  };
   btnGrid.appendChild(b);
 });
 
 document.getElementById("toHowtoBtn").onclick=()=>go(page2);
+
 document.getElementById("toGameBtn").onclick=()=>{
   round=0; mistakes=0; phase="normal"; img.src="小美正面.png";
   playMusic(0);
   go(page3);
   setTimeout(next,5000);
 };
+
 document.getElementById("restartBtn").onclick=()=>{
   modal.classList.remove("active");
   go(page1);
@@ -288,5 +319,7 @@ document.getElementById("restartBtn").onclick=()=>{
 })();
 </script>
 
+
 </body>
 </html>
+
