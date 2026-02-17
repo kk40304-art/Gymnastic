@@ -33,7 +33,7 @@
       box-shadow:0 10px 30px rgba(0,0,0,0.12);
     }
     .titleBlock{ text-align:center; }
-    .hanzi{ font-size:clamp(34px,6vw,64px); font-weight:900; }
+    .hanzi{ font-size:clamp(34px,6vw,64px); font-weight:900; letter-spacing:1px; }
     .pinyin{ font-size:clamp(18px,2.6vw,26px); opacity:.9; margin-top:8px; }
     .eng{ font-size:clamp(14px,2.2vw,20px); opacity:.85; margin-top:6px; }
 
@@ -45,27 +45,57 @@
       font-weight:800;
       background:rgba(255,255,255,0.85);
       box-shadow:0 8px 18px rgba(0,0,0,0.12);
-      transition:transform .05s ease;
+      transition:transform .05s ease, filter .2s ease;
+      user-select:none;
     }
     .btn:active{ transform:translateY(2px); }
+    .btn:hover{ filter:brightness(1.02); }
     .btnBig{ padding:18px 22px; width:min(420px,90vw); }
-    .btnLabel{ display:grid; justify-items:center; gap:6px; }
-    .bHanzi{ font-size:28px; }
-    .bPinyin{ font-size:16px; opacity:.85; font-weight:700; }
-    .bEng{ font-size:14px; opacity:.85; }
 
+    .btnLabel{ display:grid; justify-items:center; gap:6px; }
+    .btnLabel .bHanzi{ font-size:28px; }
+    .btnLabel .bPinyin{ font-size:16px; opacity:.85; font-weight:700; }
+    .btnLabel .bEng{ font-size:14px; opacity:.85; font-weight:750; }
+
+    /* How-to page */
+    #howtoCard{
+      width:min(820px,96vw);
+      background:rgba(255,255,255,0.45);
+      border-radius:20px;
+      padding:18px 18px;
+      box-shadow:0 10px 26px rgba(0,0,0,0.10);
+    }
+    #howtoCard h2{
+      margin:0 0 10px;
+      font-size:30px;
+      font-weight:1000;
+      text-align:center;
+    }
+    #howtoCard p, #howtoCard li{
+      font-size:18px;
+      line-height:1.5;
+      opacity:.95;
+    }
+    #howtoCard ul{
+      margin:10px 0 0 20px;
+      padding:0;
+    }
+
+    /* Game layout */
     #gameWrap{ width:min(980px,96vw); display:grid; gap:14px; }
     #topBar{
       display:flex;
+      align-items:center;
       justify-content:space-between;
+      gap:12px;
       flex-wrap:wrap;
-      gap:10px;
     }
     .pill{
       background:rgba(255,255,255,0.75);
       border-radius:999px;
       padding:10px 14px;
       font-weight:900;
+      box-shadow:0 6px 14px rgba(0,0,0,0.10);
     }
     #imgBox{
       display:grid;
@@ -73,6 +103,7 @@
       padding:14px;
       border-radius:22px;
       background:rgba(255,255,255,0.35);
+      box-shadow:0 10px 28px rgba(0,0,0,0.12);
     }
     #xiaomei{
       width:min(520px,86vw);
@@ -86,7 +117,9 @@
     @media (max-width: 640px){
       #btnGrid{ grid-template-columns: repeat(2, 1fr); }
     }
+    .locked .btn{ pointer-events:none; opacity:.75; }
 
+    /* Modal */
     #modal{
       position:fixed;
       inset:0;
@@ -94,228 +127,439 @@
       display:none;
       align-items:center;
       justify-content:center;
+      padding:18px;
     }
     #modal.active{ display:flex; }
     #modalCard{
+      width:min(560px,96vw);
       background:#fff;
-      padding:20px;
       border-radius:20px;
+      padding:18px;
       text-align:center;
-      width:min(560px,90vw);
+      box-shadow:0 16px 40px rgba(0,0,0,0.25);
     }
+    #modalTitle{ font-size:34px; font-weight:1000; margin:6px 0 10px; }
+    #modalMsg{ font-size:18px; opacity:.9; margin:0 0 14px; }
   </style>
 </head>
 <body>
 
-<section id="page1" class="page active">
-  <div class="card titleBlock">
-    <div class="hanzi">小美的健身操</div>
-    <div class="pinyin">Xiǎoměi de jiànshēncāo</div>
-    <div class="eng">Help Xiaomei finish her workout</div>
-  </div>
-
-  <button id="toHowtoBtn" class="btn btnBig">
-    <div class="btnLabel">
-      <div class="bHanzi">開始</div>
-      <div class="bPinyin">kāishǐ</div>
-      <div class="bEng">Start</div>
-    </div>
-  </button>
-</section>
-
-<section id="page2" class="page">
-  <div class="card">
-    <h2>How to Play</h2>
-    <p>Look at Xiaomei’s pose and click the correct Chinese direction button.</p>
-    <p>Finish 30 moves to win!</p>
-  </div>
-
-  <button id="toGameBtn" class="btn btnBig">
-    <div class="btnLabel">
-      <div class="bHanzi">開始遊戲</div>
-      <div class="bPinyin">kāishǐ yóuxì</div>
-      <div class="bEng">Start Game</div>
-    </div>
-  </button>
-</section>
-
-<section id="page3" class="page">
-  <div id="gameWrap">
-    <div id="topBar">
-      <div class="pill">回合：<span id="roundText">0</span>/30</div>
-      <div class="pill">錯誤：<span id="mistakeText">0</span>/4</div>
-      <div class="pill">倒數：<span id="timeText">-</span>s</div>
+  <!-- Page 1 -->
+  <section id="page1" class="page active">
+    <div class="card titleBlock">
+      <div class="hanzi">小美的健身操</div>
+      <div class="pinyin">Xiǎoměi de jiànshēncāo</div>
+      <div class="eng">Help Xiaomei finish her workout</div>
     </div>
 
-    <div id="imgBox">
-      <img id="xiaomei" src="小美正面.png" />
-    </div>
-
-    <div id="btnGrid"></div>
-  </div>
-</section>
-
-<div id="modal">
-  <div id="modalCard">
-    <h2 id="modalTitle"></h2>
-    <p id="modalMsg"></p>
-    <button id="restartBtn" class="btn btnBig">
+    <button id="toHowtoBtn" class="btn btnBig">
       <div class="btnLabel">
-        <div class="bHanzi">重新開始</div>
-        <div class="bPinyin">chóngxīn kāishǐ</div>
+        <div class="bHanzi">開始</div>
+        <div class="bPinyin">kāishǐ</div>
+        <div class="bEng">Start</div>
       </div>
     </button>
+  </section>
+
+  <!-- Page 2 -->
+  <section id="page2" class="page">
+    <div id="howtoCard">
+      <h2>How to Play</h2>
+      <p>Look at Xiaomei’s pose on the screen.</p>
+      <p>Your job is to click the correct <b>Chinese direction</b> button.</p>
+      <ul>
+        <li>Click a button → you will hear the Chinese pronunciation (TTS).</li>
+        <li>Answer before the timer runs out.</li>
+        <li>Too slow = same as a wrong answer.</li>
+        <li>Help Xiaomei finish <b>30</b> moves to win!</li>
+      </ul>
+      <p style="margin-top:12px; font-weight:900; text-align:center;">
+        Ready? Click “Start Game”.
+      </p>
+    </div>
+
+    <button id="toGameBtn" class="btn btnBig">
+      <div class="btnLabel">
+        <div class="bHanzi">開始遊戲</div>
+        <div class="bPinyin">kāishǐ yóuxì</div>
+        <div class="bEng">Start Game</div>
+      </div>
+    </button>
+  </section>
+
+  <!-- Page 3 -->
+  <section id="page3" class="page">
+    <div id="gameWrap">
+      <div id="topBar">
+        <div class="pill">回合：<span id="roundText">0</span>/30</div>
+        <div class="pill">錯誤：<span id="mistakeText">0</span>/4</div>
+        <div class="pill">倒數：<span id="timeText">-</span>s</div>
+      </div>
+
+      <div id="imgBox">
+        <img id="xiaomei" src="小美正面.png" alt="小美" />
+      </div>
+
+      <div id="btnGrid"></div>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div id="modal" role="dialog" aria-modal="true">
+    <div id="modalCard">
+      <div id="modalTitle"></div>
+      <p id="modalMsg"></p>
+      <button id="restartBtn" class="btn btnBig">
+        <div class="btnLabel">
+          <div class="bHanzi">重新開始</div>
+          <div class="bPinyin">chóngxīn kāishǐ</div>
+          <div class="bEng">Restart</div>
+        </div>
+      </button>
+    </div>
   </div>
-</div>
 
 <script>
 (() => {
+  // ====== Data ======
+  const DIRS = [
+    { key: "正面", pinyin:"zhèng miàn", file: { normal:"小美正面.png", sweat:"小美正面流汗.png", tired:"小美正面累.png" } },
+    { key: "前面", pinyin:"qián miàn", file: { normal:"小美前.png",   sweat:"小美前流汗.png",   tired:"小美前累.png" } },
+    { key: "後面", pinyin:"hòu miàn",   file: { normal:"小美後.png",   sweat:"小美後流汗.png",   tired:"小美後累.png" } },
+    { key: "左邊", pinyin:"zuǒ biān",   file: { normal:"小美左.png",   sweat:"小美左流汗.png",   tired:"小美左累.png" } },
+    { key: "右邊", pinyin:"yòu biān",   file: { normal:"小美右.png",   sweat:"小美右流汗.png",   tired:"小美右累.png" } },
+    { key: "上面", pinyin:"shàng miàn", file: { normal:"小美上.png",   sweat:"小美上流汗.png",   tired:"小美上累.png" } },
+    { key: "下面", pinyin:"xià miàn",   file: { normal:"小美下.png",   sweat:"小美下流汗.png",   tired:"小美下累.png" } },
+  ];
 
-const DIRS = [
-  { key: "正面", pinyin:"zhèng miàn", file: { normal:"小美正面.png", sweat:"小美正面流汗.png", tired:"小美正面累.png" } },
-  { key: "前面", pinyin:"qián miàn", file: { normal:"小美前.png", sweat:"小美前流汗.png", tired:"小美前累.png" } },
-  { key: "後面", pinyin:"hòu miàn", file: { normal:"小美後.png", sweat:"小美後流汗.png", tired:"小美後累.png" } },
-  { key: "左邊", pinyin:"zuǒ biān", file: { normal:"小美左.png", sweat:"小美左流汗.png", tired:"小美左累.png" } },
-  { key: "右邊", pinyin:"yòu biān", file: { normal:"小美右.png", sweat:"小美右流汗.png", tired:"小美右累.png" } },
-  { key: "上面", pinyin:"shàng miàn", file: { normal:"小美上.png", sweat:"小美上流汗.png", tired:"小美上累.png" } },
-  { key: "下面", pinyin:"xià miàn", file: { normal:"小美下.png", sweat:"小美下流汗.png", tired:"小美下累.png" } }
-];
-
-const SPECIAL = { collapse:"小美累趴.png", happy:"小美開心跳.png" };
-
-const bg1 = new Audio("1.wav"); bg1.loop=true; bg1.volume=0.30;
-const bg2 = new Audio("2.wav"); bg2.loop=true; bg2.volume=0.30;
-const bg3 = new Audio("3.wav"); bg3.loop=true; bg3.volume=0.30;
-const endSound = new Audio("end.wav"); endSound.volume=0.30;
-
-function stopMusic(){ [bg1,bg2,bg3,endSound].forEach(a=>{a.pause();a.currentTime=0;}); }
-function playMusic(m){
-  stopMusic();
-  if(m===0) bg1.play();
-  else if(m===1) bg2.play();
-  else if(m===2||m===3) bg3.play();
-  else endSound.play();
-}
-
-// ===== TTS =====
-let zhVoice = null;
-function loadVoice(){
-  const voices = speechSynthesis.getVoices();
-  zhVoice = voices.find(v=>v.lang.includes("zh")) || null;
-}
-speechSynthesis.onvoiceschanged = loadVoice;
-loadVoice();
-
-function speak(text){
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang="zh-TW";
-  if(zhVoice) u.voice = zhVoice;
-  u.rate=1;
-  u.pitch=1;
-  speechSynthesis.speak(u);
-}
-
-// ===== Game State =====
-let round=0, mistakes=0, phase="normal", target=null;
-let countdown=0, timer=null;
-
-const page1=document.getElementById("page1");
-const page2=document.getElementById("page2");
-const page3=document.getElementById("page3");
-const img=document.getElementById("xiaomei");
-const roundText=document.getElementById("roundText");
-const mistakeText=document.getElementById("mistakeText");
-const timeText=document.getElementById("timeText");
-const btnGrid=document.getElementById("btnGrid");
-const modal=document.getElementById("modal");
-const modalTitle=document.getElementById("modalTitle");
-const modalMsg=document.getElementById("modalMsg");
-
-function go(page){ [page1,page2,page3].forEach(p=>p.classList.remove("active")); page.classList.add("active"); }
-
-function updateHUD(){
-  roundText.textContent=round;
-  mistakeText.textContent=mistakes;
-  timeText.textContent=countdown>0?countdown:"-";
-}
-
-function next(){
-  if(round>=30){ success(); return; }
-  target=DIRS[Math.floor(Math.random()*DIRS.length)];
-  img.src = target.file[phase==="normal"?"normal":phase==="sweat"?"sweat":"tired"];
-  countdown = phase==="normal"?5:phase==="sweat"?8:10;
-  updateHUD();
-  timer=setInterval(()=>{
-    countdown--;
-    updateHUD();
-    if(countdown<=0){ clearInterval(timer); wrong(); }
-  },1000);
-}
-
-function correct(){
-  clearInterval(timer);
-  round++;
-  updateHUD();
-  next();
-}
-
-function wrong(){
-  round++;
-  mistakes++;
-  clearInterval(timer);
-  if(mistakes>=4){ fail(); return; }
-  phase = mistakes===1?"sweat":"tired";
-  playMusic(mistakes);
-  updateHUD();
-  next();
-}
-
-function fail(){
-  phase="end";
-  img.src=SPECIAL.collapse;
-  playMusic(4);
-  setTimeout(()=>{ modalTitle.textContent="Fail...."; modalMsg.textContent="再試一次！"; modal.classList.add("active"); },3000);
-}
-
-function success(){
-  phase="end";
-  img.src=SPECIAL.happy;
-  playMusic(4);
-  setTimeout(()=>{ modalTitle.textContent="恭喜你！"; modalMsg.textContent="完成健身！"; modal.classList.add("active"); },5000);
-}
-
-// ===== Build Buttons (拼音回來了) =====
-DIRS.forEach(d=>{
-  const b=document.createElement("button");
-  b.className="btn";
-  b.innerHTML=`
-    <div class="btnLabel">
-      <div class="bHanzi">${d.key}</div>
-      <div class="bPinyin">${d.pinyin}</div>
-    </div>
-  `;
-  b.onclick=()=>{
-    speak(d.key);  // TTS 回來
-    if(d.key===target.key) correct();
-    else wrong();
+  const SPECIAL = {
+    collapse: "小美累趴.png",
+    happy: "小美開心跳.png",
+    correct: "小美讚.png",
+    wrong: "小美錯.png"
   };
-  btnGrid.appendChild(b);
-});
 
-document.getElementById("toHowtoBtn").onclick=()=>go(page2);
+  // ====== DOM ======
+  const page1 = document.getElementById("page1");
+  const page2 = document.getElementById("page2");
+  const page3 = document.getElementById("page3");
 
-document.getElementById("toGameBtn").onclick=()=>{
-  round=0; mistakes=0; phase="normal"; img.src="小美正面.png";
-  playMusic(0);
-  go(page3);
-  setTimeout(next,5000);
-};
+  const toHowtoBtn = document.getElementById("toHowtoBtn");
+  const toGameBtn = document.getElementById("toGameBtn");
 
-document.getElementById("restartBtn").onclick=()=>{
-  modal.classList.remove("active");
-  go(page1);
-};
+  const gameWrap = document.getElementById("gameWrap");
+  const xiaomeiImg = document.getElementById("xiaomei");
+  const roundText = document.getElementById("roundText");
+  const mistakeText = document.getElementById("mistakeText");
+  const timeText = document.getElementById("timeText");
+  const btnGrid = document.getElementById("btnGrid");
 
+  const modal = document.getElementById("modal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalMsg = document.getElementById("modalMsg");
+  const restartBtn = document.getElementById("restartBtn");
+
+  // ====== Audio (background music 30%) ======
+  const bg1 = new Audio("1.wav"); bg1.loop = true; bg1.volume = 0.30;
+  const bg2 = new Audio("2.wav"); bg2.loop = true; bg2.volume = 0.30;
+  const bg3 = new Audio("3.wav"); bg3.loop = true; bg3.volume = 0.30;
+  const endMusic = new Audio("end.wav"); endMusic.loop = false; endMusic.volume = 0.30;
+
+  // feedback SFX (you can change volume here)
+  const sfxCorrect = new Audio("correct.wav"); sfxCorrect.volume = 0.70;
+  const sfxWrong   = new Audio("wrong.wav");   sfxWrong.volume   = 0.70;
+
+  function stopAllMusic(){
+    [bg1,bg2,bg3,endMusic].forEach(a => { try{ a.pause(); a.currentTime = 0; }catch(_){} });
+  }
+  function playMusicByMistakes(m){
+    stopAllMusic();
+    if (m <= 0) bg1.play().catch(()=>{});
+    else if (m === 1) bg2.play().catch(()=>{});
+    else if (m === 2 || m === 3) bg3.play().catch(()=>{});
+    else endMusic.play().catch(()=>{});
+  }
+
+  function playSfx(aud){
+    try { aud.pause(); aud.currentTime = 0; } catch(_){}
+    aud.play().catch(()=>{});
+  }
+
+  // ====== TTS ======
+  let zhVoice = null;
+  function pickZhVoice(){
+    const voices = speechSynthesis.getVoices();
+    const prefer = (lang) => voices.find(v => (v.lang||"").toLowerCase().startsWith(lang));
+    zhVoice = prefer("zh-tw") || prefer("zh-cn") || prefer("zh-hk") || voices.find(v => (v.lang||"").toLowerCase().startsWith("zh")) || null;
+  }
+  speechSynthesis.onvoiceschanged = pickZhVoice;
+  pickZhVoice();
+
+  function speak(text){
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = (zhVoice && zhVoice.lang) ? zhVoice.lang : "zh-TW";
+      if (zhVoice) u.voice = zhVoice;
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      speechSynthesis.speak(u);
+    }catch(_){}
+  }
+
+  // ====== Game state ======
+  let actionsDone = 0;     // 0..30 (每題算一次，不管對錯/超時)
+  let mistakes = 0;        // 0..4
+  let phase = "normal";    // normal | sweat | tired | end
+  let target = DIRS[0];
+
+  let countdown = 0;
+  let tickTimer = null;
+  let timeoutTimer = null;
+  let startDelayTimer = null;
+  let feedbackTimer = null;
+
+  let inputLocked = false;
+
+  function goTo(page){
+    [page1,page2,page3].forEach(p => p.classList.remove("active"));
+    page.classList.add("active");
+  }
+
+  function setImage(src){ xiaomeiImg.src = src; }
+
+  function updateHUD(){
+    roundText.textContent = String(actionsDone);
+    mistakeText.textContent = String(mistakes);
+    timeText.textContent = countdown > 0 ? String(countdown) : "-";
+  }
+
+  function phaseSeconds(){
+    if (phase === "normal") return 5;
+    if (phase === "sweat")  return 8;
+    if (phase === "tired")  return 10;
+    return 5;
+  }
+
+  function phaseFromMistakes(m){
+    if (m <= 0) return "normal";
+    if (m === 1) return "sweat";
+    return "tired"; // 2 or 3
+  }
+
+  function fileFor(dirObj){
+    if (phase === "normal") return dirObj.file.normal;
+    if (phase === "sweat")  return dirObj.file.sweat;
+    return dirObj.file.tired;
+  }
+
+  function clearTimers(){
+    if (tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+    if (timeoutTimer){ clearTimeout(timeoutTimer); timeoutTimer = null; }
+    if (startDelayTimer){ clearTimeout(startDelayTimer); startDelayTimer = null; }
+    if (feedbackTimer){ clearTimeout(feedbackTimer); feedbackTimer = null; }
+  }
+
+  function lockInput(lock){
+    inputLocked = lock;
+    if (lock) gameWrap.classList.add("locked");
+    else gameWrap.classList.remove("locked");
+  }
+
+  function showModal(title, msg){
+    modalTitle.textContent = title;
+    modalMsg.textContent = msg;
+    modal.classList.add("active");
+  }
+  function hideModal(){ modal.classList.remove("active"); }
+
+  function endFail(){
+    clearTimers();
+    phase = "end";
+    lockInput(true);
+    setImage(SPECIAL.collapse);
+    playMusicByMistakes(4);
+    countdown = 0;
+    updateHUD();
+    setTimeout(() => showModal("Fail....", "再試一次，幫小美重新開始健身！"), 3000);
+  }
+
+  function endSuccess(){
+    clearTimers();
+    phase = "end";
+    lockInput(true);
+    setImage(SPECIAL.happy);
+    stopAllMusic();
+    endMusic.play().catch(()=>{});
+    countdown = 0;
+    updateHUD();
+    setTimeout(() => showModal("恭喜你！", "恭喜你幫助小美完成健身！"), 5000);
+  }
+
+  function startCountdown(seconds){
+    countdown = seconds;
+    updateHUD();
+
+    tickTimer = setInterval(() => {
+      countdown -= 1;
+      updateHUD();
+      if (countdown <= 0){
+        clearInterval(tickTimer);
+        tickTimer = null;
+      }
+    }, 1000);
+
+    timeoutTimer = setTimeout(() => {
+      // 超時算錯：先回饋 wrong，再走錯誤邏輯
+      clearTimers();
+      handleWrong(true);
+    }, seconds * 1000);
+  }
+
+  function nextAction(){
+    if (phase === "end") return;
+
+    if (actionsDone >= 30){
+      endSuccess();
+      return;
+    }
+
+    lockInput(false);
+    clearTimers();
+
+    target = DIRS[Math.floor(Math.random() * DIRS.length)];
+    setImage(fileFor(target));
+    startCountdown(phaseSeconds());
+  }
+
+  // ====== Feedback handlers ======
+  // correct: show thumbs-up + correct.wav + wait 2s -> next
+  function handleCorrect(){
+    if (phase === "end" || inputLocked) return;
+
+    lockInput(true);
+    clearTimers();
+
+    // 回饋畫面
+    setImage(SPECIAL.correct);
+    playSfx(sfxCorrect);
+
+    // 題目計次（不管在哪階段，對了也算一次）
+    actionsDone += 1;
+    countdown = 0;
+    updateHUD();
+
+    feedbackTimer = setTimeout(() => {
+      if (actionsDone >= 30) endSuccess();
+      else nextAction();
+    }, 2000);
+  }
+
+  // wrong: show angry + wrong.wav + wait 2s -> next / fail
+  // isTimeout just for your own debugging; logic same as wrong
+  function handleWrong(isTimeout=false){
+    if (phase === "end" || inputLocked) return;
+
+    lockInput(true);
+    clearTimers();
+
+    // 回饋畫面
+    setImage(SPECIAL.wrong);
+    playSfx(sfxWrong);
+
+    // 這題算一次
+    actionsDone += 1;
+
+    // 錯誤+1
+    mistakes += 1;
+    updateHUD();
+
+    feedbackTimer = setTimeout(() => {
+      if (mistakes >= 4){
+        endFail();
+        return;
+      }
+
+      // 更新階段與背景音樂
+      phase = phaseFromMistakes(mistakes);
+      playMusicByMistakes(mistakes);
+
+      if (actionsDone >= 30) endSuccess();
+      else nextAction();
+    }, 2000);
+  }
+
+  // ====== Buttons ======
+  function buildButtons(){
+    btnGrid.innerHTML = "";
+    DIRS.forEach(d => {
+      const b = document.createElement("button");
+      b.className = "btn";
+      b.innerHTML = `
+        <div class="btnLabel">
+          <div class="bHanzi">${d.key}</div>
+          <div class="bPinyin">${d.pinyin}</div>
+        </div>
+      `;
+      b.addEventListener("click", () => {
+        if (phase === "end" || inputLocked) return;
+
+        // 點擊念中文
+        speak(d.key);
+
+        // 判斷對錯
+        if (d.key === target.key) handleCorrect();
+        else handleWrong(false);
+      });
+      btnGrid.appendChild(b);
+    });
+  }
+
+  function resetGame(){
+    clearTimers();
+    stopAllMusic();
+    try{ speechSynthesis.cancel(); }catch(_){}
+
+    actionsDone = 0;
+    mistakes = 0;
+    phase = "normal";
+    target = DIRS[0];
+    countdown = 0;
+
+    lockInput(false);
+    setImage("小美正面.png");
+    updateHUD();
+  }
+
+  // ====== Flow ======
+  toHowtoBtn.addEventListener("click", () => goTo(page2));
+
+  toGameBtn.addEventListener("click", () => {
+    hideModal();
+    resetGame();
+    goTo(page3);
+
+    // 背景音樂：必須在使用者點擊後才能播放
+    playMusicByMistakes(0);
+
+    // 先顯示正面停 5 秒，再開始出題
+    setImage("小美正面.png");
+    lockInput(true);
+    startDelayTimer = setTimeout(() => {
+      lockInput(false);
+      nextAction();
+    }, 5000);
+  });
+
+  restartBtn.addEventListener("click", () => {
+    hideModal();
+    resetGame();
+    goTo(page1);
+  });
+
+  // Init
+  buildButtons();
+  resetGame();
 })();
 </script>
 
