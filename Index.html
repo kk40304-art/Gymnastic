@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>中文健身！小美健身操</title>
+  <style>
+    :root { --bg: #FFD400; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color:#111;
+    }
+    .page{
+      min-height:100vh;
+      display:none;
+      padding:24px;
+    }
+    .page.active{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:18px;
+    }
+    .card{
+      width:min(980px,96vw);
+      background:rgba(255,255,255,0.35);
+      border-radius:20px;
+      padding:20px 18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.12);
+    }
+    .titleBlock{ text-align:center; }
+    .hanzi{ font-size:clamp(34px,6vw,64px); font-weight:900; }
+    .pinyin{ font-size:clamp(18px,2.6vw,26px); opacity:.9; margin-top:8px; }
+    .eng{ font-size:clamp(14px,2.2vw,20px); opacity:.85; margin-top:6px; }
+
+    .btn{
+      border:0;
+      cursor:pointer;
+      padding:14px 18px;
+      border-radius:16px;
+      font-weight:800;
+      background:rgba(255,255,255,0.85);
+      box-shadow:0 8px 18px rgba(0,0,0,0.12);
+      transition:transform .05s ease;
+    }
+    .btn:active{ transform:translateY(2px); }
+    .btnBig{ padding:18px 22px; width:min(420px,90vw); }
+    .btnLabel{ display:grid; justify-items:center; gap:6px; }
+    .bHanzi{ font-size:28px; }
+    .bPinyin{ font-size:16px; opacity:.85; font-weight:700; }
+    .bEng{ font-size:14px; opacity:.85; }
+
+    #gameWrap{ width:min(980px,96vw); display:grid; gap:14px; }
+    #topBar{
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .pill{
+      background:rgba(255,255,255,0.75);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:900;
+    }
+    #imgBox{
+      display:grid;
+      place-items:center;
+      padding:14px;
+      border-radius:22px;
+      background:rgba(255,255,255,0.35);
+    }
+    #xiaomei{
+      width:min(520px,86vw);
+      height:auto;
+    }
+    #btnGrid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 640px){
+      #btnGrid{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    #modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+    #modal.active{ display:flex; }
+    #modalCard{
+      background:#fff;
+      padding:20px;
+      border-radius:20px;
+      text-align:center;
+      width:min(560px,90vw);
+    }
+  </style>
+</head>
+<body>
+
+<section id="page1" class="page active">
+  <div class="card titleBlock">
+    <div class="hanzi">小美的健身操</div>
+    <div class="pinyin">Xiǎoměi de jiànshēncāo</div>
+    <div class="eng">Help Xiaomei finish her workout</div>
+  </div>
+
+  <button id="toHowtoBtn" class="btn btnBig">
+    <div class="btnLabel">
+      <div class="bHanzi">開始</div>
+      <div class="bPinyin">kāishǐ</div>
+      <div class="bEng">Start</div>
+    </div>
+  </button>
+</section>
+
+<section id="page2" class="page">
+  <div class="card">
+    <h2>How to Play</h2>
+    <p>Look at Xiaomei’s pose and click the correct Chinese direction button.</p>
+    <p>Finish 30 moves to win!</p>
+  </div>
+
+  <button id="toGameBtn" class="btn btnBig">
+    <div class="btnLabel">
+      <div class="bHanzi">開始遊戲</div>
+      <div class="bPinyin">kāishǐ yóuxì</div>
+      <div class="bEng">Start Game</div>
+    </div>
+  </button>
+</section>
+
+<section id="page3" class="page">
+  <div id="gameWrap">
+    <div id="topBar">
+      <div class="pill">回合：<span id="roundText">0</span>/30</div>
+      <div class="pill">錯誤：<span id="mistakeText">0</span>/4</div>
+      <div class="pill">倒數：<span id="timeText">-</span>s</div>
+    </div>
+
+    <div id="imgBox">
+      <img id="xiaomei" src="小美正面.png" />
+    </div>
+
+    <div id="btnGrid"></div>
+  </div>
+</section>
+
+<div id="modal">
+  <div id="modalCard">
+    <h2 id="modalTitle"></h2>
+    <p id="modalMsg"></p>
+    <button id="restartBtn" class="btn btnBig">
+      <div class="btnLabel">
+        <div class="bHanzi">重新開始</div>
+        <div class="bPinyin">chóngxīn kāishǐ</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<script>
+(() => {
+
+const DIRS = [
+  { key: "正面", file: { normal:"小美正面.png", sweat:"小美正面流汗.png", tired:"小美正面累.png" } },
+  { key: "前面", file: { normal:"小美前.png", sweat:"小美前流汗.png", tired:"小美前累.png" } },
+  { key: "後面", file: { normal:"小美後.png", sweat:"小美後流汗.png", tired:"小美後累.png" } },
+  { key: "左邊", file: { normal:"小美左.png", sweat:"小美左流汗.png", tired:"小美左累.png" } },
+  { key: "右邊", file: { normal:"小美右.png", sweat:"小美右流汗.png", tired:"小美右累.png" } },
+  { key: "上面", file: { normal:"小美上.png", sweat:"小美上流汗.png", tired:"小美上累.png" } },
+  { key: "下面", file: { normal:"小美下.png", sweat:"小美下流汗.png", tired:"小美下累.png" } }
+];
+
+const SPECIAL = { collapse:"小美累趴.png", happy:"小美開心跳.png" };
+
+const bg1 = new Audio("1.wav"); bg1.loop=true; bg1.volume=0.30;
+const bg2 = new Audio("2.wav"); bg2.loop=true; bg2.volume=0.30;
+const bg3 = new Audio("3.wav"); bg3.loop=true; bg3.volume=0.30;
+const endSound = new Audio("end.wav"); endSound.volume=0.30;
+
+function stopMusic(){ [bg1,bg2,bg3,endSound].forEach(a=>{a.pause();a.currentTime=0;}); }
+function playMusic(m){
+  stopMusic();
+  if(m===0) bg1.play();
+  else if(m===1) bg2.play();
+  else if(m===2||m===3) bg3.play();
+  else endSound.play();
+}
+
+let round=0, mistakes=0, phase="normal", target=null;
+let countdown=0, timer=null;
+
+const page1=document.getElementById("page1");
+const page2=document.getElementById("page2");
+const page3=document.getElementById("page3");
+const img=document.getElementById("xiaomei");
+const roundText=document.getElementById("roundText");
+const mistakeText=document.getElementById("mistakeText");
+const timeText=document.getElementById("timeText");
+const btnGrid=document.getElementById("btnGrid");
+const modal=document.getElementById("modal");
+const modalTitle=document.getElementById("modalTitle");
+const modalMsg=document.getElementById("modalMsg");
+
+function go(page){ [page1,page2,page3].forEach(p=>p.classList.remove("active")); page.classList.add("active"); }
+
+function updateHUD(){
+  roundText.textContent=round;
+  mistakeText.textContent=mistakes;
+  timeText.textContent=countdown>0?countdown:"-";
+}
+
+function next(){
+  if(round>=30){ success(); return; }
+  target=DIRS[Math.floor(Math.random()*DIRS.length)];
+  img.src = target.file[phase==="normal"?"normal":phase==="sweat"?"sweat":"tired"];
+  countdown = phase==="normal"?5:phase==="sweat"?8:10;
+  updateHUD();
+  timer=setInterval(()=>{
+    countdown--;
+    updateHUD();
+    if(countdown<=0){ clearInterval(timer); wrong(); }
+  },1000);
+}
+
+function correct(){
+  clearInterval(timer);
+  round++;
+  updateHUD();
+  next();
+}
+
+function wrong(){
+  round++;
+  mistakes++;
+  clearInterval(timer);
+  if(mistakes>=4){ fail(); return; }
+  phase = mistakes===1?"sweat":"tired";
+  playMusic(mistakes);
+  updateHUD();
+  next();
+}
+
+function fail(){
+  phase="end";
+  img.src=SPECIAL.collapse;
+  playMusic(4);
+  setTimeout(()=>{ modalTitle.textContent="Fail...."; modalMsg.textContent="再試一次！"; modal.classList.add("active"); },3000);
+}
+
+function success(){
+  phase="end";
+  img.src=SPECIAL.happy;
+  playMusic(4);
+  setTimeout(()=>{ modalTitle.textContent="恭喜你！"; modalMsg.textContent="完成健身！"; modal.classList.add("active"); },5000);
+}
+
+DIRS.forEach(d=>{
+  const b=document.createElement("button");
+  b.className="btn";
+  b.innerHTML=`<div class="btnLabel"><div class="bHanzi">${d.key}</div></div>`;
+  b.onclick=()=>{ if(d.key===target.key) correct(); else wrong(); };
+  btnGrid.appendChild(b);
+});
+
+document.getElementById("toHowtoBtn").onclick=()=>go(page2);
+document.getElementById("toGameBtn").onclick=()=>{
+  round=0; mistakes=0; phase="normal"; img.src="小美正面.png";
+  playMusic(0);
+  go(page3);
+  setTimeout(next,5000);
+};
+document.getElementById("restartBtn").onclick=()=>{
+  modal.classList.remove("active");
+  go(page1);
+};
+
+})();
+</script>
+
+</body>
+</html>
